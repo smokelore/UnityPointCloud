@@ -1,6 +1,7 @@
 using UnityEngine;
 using System.Collections;
- 
+using MathNet.Numerics.LinearAlgebra;
+
 public class PointCloud : MonoBehaviour
 {
   private Camera cam;
@@ -11,6 +12,8 @@ public class PointCloud : MonoBehaviour
   public bool autoRotateEnabled = false;
   // The 2-D array of all points to plot.
   public float[,] p;
+  // The 1-D array of the color of all points to plot.
+  public Color[] c;
   // The maximum x-value, y-value, and z-value among the points. This is used for coloring.
   public float max = 1.0f;
   public Color backgroundRGBA = Color.white/4;
@@ -19,6 +22,13 @@ public class PointCloud : MonoBehaviour
   {
     // Set the control camera to be the Main Camera.
     cam = Camera.mainCamera.camera;
+
+    // Get new CloudPoint data.
+    CloudPoint[] cloudP = new CloudPoint[1];
+    cloudP[0] = new CloudPoint(new Vector(new double[] {0.5,0.5,0.5}), Color.red, new Vector(new double[] {0.5,0.5,0.5}));
+    // Convert the CloudPoint data and fill the p locations matrix and c colors matrix.
+    getCloudPoints(cloudP);
+    
     // Initial point cloud rendering.
     updatePoints = true;
   }
@@ -27,11 +37,9 @@ public class PointCloud : MonoBehaviour
   {
     if (updatePoints)
     {
-      // Get new point positions.
-      p = new float[3,3] {{0.0f, 0.0f, 0.0f}, {0.9f, 0.5f, 0.4f}, {0.3f, 1.0f, 0.2f}};
-      //p = new float[3,3] {{0.0f, 0.0f, 0.0f}, {9.9f, 5.5f, 4.4f}, {3.3f, 10.0f, 2.2f}};
+      // RETRIEVE UPDATED POINTS HERE IF YOU WANT TO
       // Create new particles and set at new positions.
-      SetPoints(p);
+      SetPoints(p,c);
       // Redraw the points.
       particleSystem.SetParticles(cloud, cloud.Length);
       // Reset Camera distance according to coordinate range;
@@ -114,5 +122,17 @@ public class PointCloud : MonoBehaviour
           max = points[i,j];
 
     return max;
+  }
+
+  private void getCloudPoints(CloudPoint[] cloudPoints) {
+    p = new float[cloudPoints.Length,3];
+    c = new Color[cloudPoints.Length];
+    // Convert CloudPoint array to 2-D location array and 1-D color array.
+    for (int i = 0; i < cloudPoints.Length; i++) {
+      p[i,0] = (float) cloudPoints[i].location[0];
+      p[i,1] = (float) cloudPoints[i].location[1];
+      p[i,2] = (float) cloudPoints[i].location[2];
+      c[i] = cloudPoints[i].color;
+    }
   }
 }
