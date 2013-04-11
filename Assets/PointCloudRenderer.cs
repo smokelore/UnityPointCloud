@@ -11,14 +11,14 @@ public class PointCloudRenderer : MonoBehaviour
   public bool controlsEnabled = true;
   public bool autoRotateEnabled = false;
   // The 2-D array of all points to plot.
-  public float[,] p;
+  private float[,] p;
   // The 1-D array of the color of all points to plot.
-  public Color[] c;
+  private Color[] c;
   // The maximum x-value, y-value, and z-value among the points. This is used for coloring.
   public float max = 1.0f;
   public Color backgroundRGBA = Color.white/4;
-  public float particleSize = 1.0f;
-  public float rotateSpeed = 100.0f;
+  public float particleSize = 0.004f;
+  public float rotateSpeed = 50.0f;
   public float zoomSpeed = 25.0f;
 
   void Start ()
@@ -37,8 +37,21 @@ public class PointCloudRenderer : MonoBehaviour
     getCloudPoints(cloudP);
     // Fix all negative points and force them into the unit cube.
     normalizePoints();
+    // Reset Camera to focus at center of unit cube with original viewing angle.
+    resetCamera();
     // Initial point cloud rendering.
     updatePoints = true;
+  }
+
+  void resetCamera() {
+    // Update points' Max.
+    max = Max(p);
+    // Reset Camera distance according to coordinate range;
+    cam.transform.position = new Vector3(0, max/2, 0);
+    cam.transform.LookAt(Vector3.one * max/2);
+    cam.transform.position -= cam.transform.forward*2*max;
+    // Set the background of the control camera's display.
+    cam.backgroundColor = backgroundRGBA;
   }
 
   void Update () 
@@ -53,12 +66,7 @@ public class PointCloudRenderer : MonoBehaviour
       SetPoints(p,c);
       // Redraw the points.
       particleSystem.SetParticles(cloud, cloud.Length);
-      // Reset Camera distance according to coordinate range;
-      cam.transform.position = new Vector3(0, max/2, 0);
-      cam.transform.LookAt(Vector3.one * max/2);
-      cam.transform.position -= cam.transform.forward*2*max;
-      // Set the background of the control camera's display.
-      cam.backgroundColor = backgroundRGBA;
+      
       // Don't redraw the points until SetPoints() is called again.
       updatePoints = false;
     }
@@ -101,7 +109,7 @@ public class PointCloudRenderer : MonoBehaviour
       // Color points according to xyz location.
       rgba[i] = new Color(points[i,0], points[i,1], points[i,2]);
       // Normalize with max coordinate value.
-      rgba[i] /= max;
+      //rgba[i] /= max;
       // Retain complete opacity.
       rgba[i].a = 255;
     }
@@ -173,7 +181,7 @@ public class PointCloudRenderer : MonoBehaviour
 
   }
 
-  private void getCloudPoints(CloudPoint[] cloudPoints) {
+  public void getCloudPoints(CloudPoint[] cloudPoints) {
     p = new float[cloudPoints.Length,3];
     c = new Color[cloudPoints.Length];
     // Convert CloudPoint array to 2-D location array and 1-D color array.
