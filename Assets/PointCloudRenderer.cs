@@ -2,7 +2,7 @@ using UnityEngine;
 using System.Collections;
 using MathNet.Numerics.LinearAlgebra;
 
-public class PointCloud : MonoBehaviour
+public class PointCloudRenderer : MonoBehaviour
 {
   private Camera cam;
   private ParticleSystem.Particle[] cloud;
@@ -17,6 +17,7 @@ public class PointCloud : MonoBehaviour
   // The maximum x-value, y-value, and z-value among the points. This is used for coloring.
   public float max = 1.0f;
   public Color backgroundRGBA = Color.white/4;
+  public float particleSize = 1.0f;
 
   void Start ()
   {
@@ -24,11 +25,16 @@ public class PointCloud : MonoBehaviour
     cam = Camera.mainCamera.camera;
 
     // Get new CloudPoint data.
-    CloudPoint[] cloudP = new CloudPoint[1];
-    cloudP[0] = new CloudPoint(new Vector(new double[] {0.5,0.5,0.5}), Color.red, new Vector(new double[] {0.5,0.5,0.5}));
+    CloudPoint[] cloudP = new CloudPoint[4];
+    cloudP[0] = new CloudPoint(new Vector(new double[] {-562.1205,562.1205,-2230}), Color.red, new Vector(new double[] {0,0,0}));
+    cloudP[1] = new CloudPoint(new Vector(new double[] {-549.9371,565.6496,-2244}), Color.red, new Vector(new double[] {0,0,0}));
+    cloudP[2] = new CloudPoint(new Vector(new double[] {-534.2246,565.6496,-2244}), Color.red, new Vector(new double[] {0,0,0}));
+    cloudP[3] = new CloudPoint(new Vector(new double[] {-518.5121,565.6496,-2244}), Color.red, new Vector(new double[] {0,0,0}));
+    
     // Convert the CloudPoint data and fill the p locations matrix and c colors matrix.
     getCloudPoints(cloudP);
-    
+    // Fix all negative points and force them into the unit cube.
+    normalizePoints();
     // Initial point cloud rendering.
     updatePoints = true;
   }
@@ -38,6 +44,9 @@ public class PointCloud : MonoBehaviour
     if (updatePoints)
     {
       // RETRIEVE UPDATED POINTS HERE IF YOU WANT TO
+
+      // Fix all negative points and force them into the unit cube.
+      normalizePoints();
       // Create new particles and set at new positions.
       SetPoints(p,c);
       // Redraw the points.
@@ -45,7 +54,7 @@ public class PointCloud : MonoBehaviour
       // Reset Camera distance according to coordinate range;
       cam.transform.position = new Vector3(0, max/2, 0);
       cam.transform.LookAt(Vector3.one * max/2);
-      cam.transform.position -= cam.transform.forward*5/4*max;
+      cam.transform.position -= cam.transform.forward*2*max;
       // Set the background of the control camera's display.
       cam.backgroundColor = backgroundRGBA;
       // Don't redraw the points until SetPoints() is called again.
@@ -65,6 +74,10 @@ public class PointCloud : MonoBehaviour
         cam.transform.RotateAround(new Vector3(max/2, max/2, max/2), -1*Vector3.up, Mathf.Pow(max/2,1/3)*150*Time.deltaTime);
       else if (Input.GetKey("left"))
         cam.transform.RotateAround(new Vector3(max/2, max/2, max/2), Vector3.up, Mathf.Pow(max/2,1/3)*150*Time.deltaTime);
+    
+      // Scroll camera zoom controls:
+      cam.transform.position += cam.transform.forward * Input.GetAxis("Mouse ScrollWheel")*25*Time.deltaTime;
+
     }
 
     if (autoRotateEnabled)
@@ -98,6 +111,9 @@ public class PointCloud : MonoBehaviour
   {
     cloud = new ParticleSystem.Particle[points.GetLength(0)];
 
+    // Find the max value of any coordinate and use it for normalizing the automatic coloring of the points.
+    max = Max(p);
+
     for (int i = 0; i < points.GetLength(0); ++i)
     {
       // Set position of particles to match those of the 3-D points.
@@ -105,7 +121,8 @@ public class PointCloud : MonoBehaviour
       // Color points according to Color[] array.
       cloud[i].color = rgba[i];
       // Static size.
-      cloud[i].size = max/20;
+      cloud[i].size = particleSize;
+      //print("{ x: " + cloud[i].position.x + " // y: " + cloud[i].position.y + " // z: " + cloud[i].position.z + " }");
     }
     
     // Every time the points are set, redraw them.
@@ -124,6 +141,36 @@ public class PointCloud : MonoBehaviour
     return max;
   }
 
+  private void correctNegativePoints() {
+    // Find the most negative value for each coordinate and subtract it from every one of those resepective coordinates.
+    // For example, if -300 was the most negative x-coordinate in p[], this would subtract -300 from every x-coordinate in p[].
+    Vector3 negaXYZ = Vector3.zero;
+    for (int i = 0; i < p.GetLength(0); i++) {
+      if (p[i,0] < negaXYZ.x)   negaXYZ.x = p[i,0];
+      if (p[i,1] < negaXYZ.y)   negaXYZ.y = p[i,1];
+      if (p[i,2] < negaXYZ.z)   negaXYZ.z = p[i,2];
+    }
+
+    for (int i = 0; i < p.GetLength(0); i++) {
+      p[i,0] -= negaXYZ.x;
+      p[i,1] -= negaXYZ.y;
+      p[i,2] -= negaXYZ.z;
+    }
+  }
+
+  private void normalizePoints() {
+    correctNegativePoints();
+    max = Max(p);
+
+    // Force every point to be in the unit cube.
+    for (int i = 0; i < p.GetLength(0); i++) {
+      p[i,0] /= max;
+      p[i,1] /= max;
+      p[i,2] /= max;
+    }
+
+  }
+
   private void getCloudPoints(CloudPoint[] cloudPoints) {
     p = new float[cloudPoints.Length,3];
     c = new Color[cloudPoints.Length];
@@ -134,5 +181,8 @@ public class PointCloud : MonoBehaviour
       p[i,2] = (float) cloudPoints[i].location[2];
       c[i] = cloudPoints[i].color;
     }
+
+    updatePoints = true;
+
   }
 }
