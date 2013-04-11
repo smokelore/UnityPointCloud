@@ -18,6 +18,8 @@ public class PointCloudRenderer : MonoBehaviour
   public float max = 1.0f;
   public Color backgroundRGBA = Color.white/4;
   public float particleSize = 1.0f;
+  public float rotateSpeed = 100.0f;
+  public float zoomSpeed = 25.0f;
 
   void Start ()
   {
@@ -65,25 +67,25 @@ public class PointCloudRenderer : MonoBehaviour
     {
       // Horizontal camera rotation controls:
       if (Input.GetKey("up"))
-        cam.transform.RotateAround(new Vector3(max/2, max/2, max/2), Vector3.right, Mathf.Pow(max/2,1/3)*150*Time.deltaTime);
+        cam.transform.RotateAround(new Vector3(max/2, max/2, max/2), Vector3.right, rotateSpeed*Time.deltaTime);
       else if (Input.GetKey("down"))
-        cam.transform.RotateAround(new Vector3(max/2, max/2, max/2), -1*Vector3.right, Mathf.Pow(max/2,1/3)*150*Time.deltaTime);
+        cam.transform.RotateAround(new Vector3(max/2, max/2, max/2), -1*Vector3.right, rotateSpeed*Time.deltaTime);
 
       // Vertical camera rotation controls:
       if (Input.GetKey("right"))
-        cam.transform.RotateAround(new Vector3(max/2, max/2, max/2), -1*Vector3.up, Mathf.Pow(max/2,1/3)*150*Time.deltaTime);
+        cam.transform.RotateAround(new Vector3(max/2, max/2, max/2), -1*Vector3.up, rotateSpeed*Time.deltaTime);
       else if (Input.GetKey("left"))
-        cam.transform.RotateAround(new Vector3(max/2, max/2, max/2), Vector3.up, Mathf.Pow(max/2,1/3)*150*Time.deltaTime);
+        cam.transform.RotateAround(new Vector3(max/2, max/2, max/2), Vector3.up, rotateSpeed*Time.deltaTime);
     
       // Scroll camera zoom controls:
-      cam.transform.position += cam.transform.forward * Input.GetAxis("Mouse ScrollWheel")*25*Time.deltaTime;
+      cam.transform.position += cam.transform.forward * Input.GetAxis("Mouse ScrollWheel")*zoomSpeed*Time.deltaTime;
 
     }
 
     if (autoRotateEnabled)
     {
       // Rotate up and to the right around the center of the point cloud.
-      cam.transform.RotateAround(new Vector3(max/2, max/2, max/2), Vector3.right + Vector3.up, Mathf.Pow(max/2,1/3)*20*Time.deltaTime);
+      cam.transform.RotateAround(new Vector3(max/2, max/2, max/2), Vector3.right + Vector3.up, rotateSpeed*Time.deltaTime);
     }
   }
 
