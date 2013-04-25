@@ -8,8 +8,6 @@ public class PointCloudRenderer : MonoBehaviour
   private ParticleSystem.Particle[] cloud;
   // Enable this in realtime if you want to re-render the points and camera background.
   public bool updatePoints = false;
-  public bool controlsEnabled = true;
-  public bool autoRotateEnabled = false;
   // The 2-D array of all points to plot.
   private float[,] p;
   // The 1-D array of the color of all points to plot.
@@ -18,8 +16,7 @@ public class PointCloudRenderer : MonoBehaviour
   public float max = 1.0f;
   public Color backgroundRGBA = Color.white/4;
   public float particleSize = 0.004f;
-  public float rotateSpeed = 50.0f;
-  public float zoomSpeed = 25.0f;
+
 
   void Start ()
   {
@@ -38,7 +35,7 @@ public class PointCloudRenderer : MonoBehaviour
     // Fix all negative points and force them into the unit cube.
     normalizePoints();
     // Reset Camera to focus at center of unit cube with original viewing angle.
-    resetCamera();
+    //resetCamera();
     // Initial point cloud rendering.
     updatePoints = true;
   }
@@ -50,8 +47,6 @@ public class PointCloudRenderer : MonoBehaviour
     cam.transform.position = new Vector3(0, max/2, 0);
     cam.transform.LookAt(Vector3.one * max/2);
     cam.transform.position -= cam.transform.forward*2*max;
-    // Set the background of the control camera's display.
-    cam.backgroundColor = backgroundRGBA;
   }
 
   void Update () 
@@ -69,31 +64,6 @@ public class PointCloudRenderer : MonoBehaviour
       
       // Don't redraw the points until SetPoints() is called again.
       updatePoints = false;
-    }
-
-    if (controlsEnabled)
-    {
-      // Horizontal camera rotation controls:
-      if (Input.GetKey("up"))
-        cam.transform.RotateAround(new Vector3(max/2, max/2, max/2), Vector3.right, rotateSpeed*Time.deltaTime);
-      else if (Input.GetKey("down"))
-        cam.transform.RotateAround(new Vector3(max/2, max/2, max/2), -1*Vector3.right, rotateSpeed*Time.deltaTime);
-
-      // Vertical camera rotation controls:
-      if (Input.GetKey("right"))
-        cam.transform.RotateAround(new Vector3(max/2, max/2, max/2), -1*Vector3.up, rotateSpeed*Time.deltaTime);
-      else if (Input.GetKey("left"))
-        cam.transform.RotateAround(new Vector3(max/2, max/2, max/2), Vector3.up, rotateSpeed*Time.deltaTime);
-    
-      // Scroll camera zoom controls:
-      cam.transform.position += cam.transform.forward * Input.GetAxis("Mouse ScrollWheel")*zoomSpeed*Time.deltaTime;
-
-    }
-
-    if (autoRotateEnabled)
-    {
-      // Rotate up and to the right around the center of the point cloud.
-      cam.transform.RotateAround(new Vector3(max/2, max/2, max/2), Vector3.right + Vector3.up, rotateSpeed*Time.deltaTime);
     }
   }
 
